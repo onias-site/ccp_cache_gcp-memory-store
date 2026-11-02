@@ -2,7 +2,7 @@
                 
     
     
-    <wb-module deploy-name="ccp_cache_gcp-memcache">
+    <wb-module deploy-name="ccp_cache_gcp-memory-store">
                                 
         
         

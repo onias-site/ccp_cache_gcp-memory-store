@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ccp</groupId> 
-	<artifactId>ccp_cache_gcp-memcache</artifactId>
+	<artifactId>ccp_cache_gcp-memory-store</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
@@ -20,9 +20,9 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.google.appengine</groupId>
-			<artifactId>appengine-api-1.0-sdk</artifactId>
-			<version>1.9.64</version>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>5.0.2</version>
 		</dependency>
 
 	</dependencies>
