@@ -12,6 +12,7 @@ import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpPropertiesDecorator;
 import com.ccp.decorators.CcpStringDecorator;
 import com.ccp.especifications.cache.CcpCache;
+import com.ccp.especifications.db.utils.CcpDbCallsOfTheThread;
 
 import redis.clients.jedis.ConnectionPoolConfig;
 import redis.clients.jedis.JedisPooled;
@@ -108,8 +109,11 @@ class GcpMemoryStore implements CcpCache {
 	@SuppressWarnings("unchecked")
 	@CcpAllowNullReturn
 	public Object get(String key) {
+		long started = System.nanoTime();
 		String storedText = this.client.get(key);
 		boolean missing = storedText == null;
+		double clientMs = elapsedMs(started);
+		CcpDbCallsOfTheThread.recordCacheRead(key, false == missing, clientMs);
 
 		if (missing) {
 			return null;
@@ -141,7 +145,10 @@ class GcpMemoryStore implements CcpCache {
 		Object valueToStore = isCcpJsonRepresentation ? ((CcpJsonRepresentation) value).content : value;
 		CcpJsonRepresentation storedJson = CcpOtherConstants.EMPTY_JSON.put(Fields.value, valueToStore);
 		String storedText = storedJson.asUgglyJson();
+		long started = System.nanoTime();
 		this.client.setex(key, secondsDelay, storedText);
+		double clientMs = elapsedMs(started);
+		CcpDbCallsOfTheThread.recordCacheWrite(clientMs);
 		return this;
 	}
 
@@ -150,7 +157,10 @@ class GcpMemoryStore implements CcpCache {
 	 * @param key the cache key
 	 */
 	public void delete(String key) {
+		long started = System.nanoTime();
 		this.client.del(key);
+		double clientMs = elapsedMs(started);
+		CcpDbCallsOfTheThread.recordCacheWrite(clientMs);
 	}
 
 	/**
@@ -166,7 +176,21 @@ class GcpMemoryStore implements CcpCache {
 
 		int keysCount = keys.size();
 		String[] keysToDelete = keys.toArray(new String[keysCount]);
+		long started = System.nanoTime();
 		this.client.del(keysToDelete);
+		double clientMs = elapsedMs(started);
+		CcpDbCallsOfTheThread.recordCacheWrite(clientMs);
+	}
+
+	/**
+	 * The time since a moment, for the measurement of the commands ({@link CcpDbCallsOfTheThread}).
+	 * @param started the moment, from {@link System#nanoTime()}
+	 * @return the milliseconds since it
+	 */
+	private static double elapsedMs(long started) {
+		long elapsedNanos = System.nanoTime() - started;
+		double elapsedMs = elapsedNanos / 1_000_000.0;
+		return elapsedMs;
 	}
 
 }
